@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Froggy Jump Math - Game Edukasi Matematika</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for Kids-friendly Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: #0f172a;
+            overflow-x: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .font-kids {
+            font-family: 'Fredoka One', cursive;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4ade80;
+            border-radius: 4px;
+        }
+        
+        /* Animations */
+        @keyframes float-leaf {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-6px) rotate(1deg); }
+        }
+        .animate-leaf {
+            animation: float-leaf 4s ease-in-out infinite;
+        }
+        
+        @keyframes ripple-effect {
+            0% { transform: scale(0.5); opacity: 1; }
+            100% { transform: scale(2.5); opacity: 0; }
+        }
+        .ripple {
+            position: absolute;
+            border: 4px solid rgba(147, 197, 253, 0.6);
+            border-radius: 50%;
+            animation: ripple-effect 1.2s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+        }
+
+        /* Rain particle styles */
+        .rain-drop {
+            position: absolute;
+            background: linear-gradient(transparent, rgba(147, 233, 250, 0.4));
+            width: 1px;
+            pointer-events: none;
+        }
+
+        /* Custom screen splitting grids */
+        .duel-layout {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .squad-layout {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-rows: repeat(2, minmax(0, 1fr));
+        }
+
+        @media (max-width: 768px) {
+            .duel-layout {
+                grid-template-columns: 1fr;
+                grid-template-rows: repeat(2, minmax(0, 1fr));
+            }
+            .squad-layout {
+                grid-template-columns: 1fr;
+                grid-template-rows: repeat(4, minmax(0, 1fr));
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-100 flex flex-col justify-between">
+
+    <!-- Top Navigation Header -->
+    <header class="bg-slate-900/85 backdrop-blur-md border-b-2 border-emerald-500/30 p-4 sticky top-0 z-50 transition-all duration-300">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+            <!-- Brand Logo -->
+            <div class="flex items-center space-x-3">
+                <div class="bg-gradient-to-tr from-emerald-500 to-green-400 p-2.5 rounded-2xl shadow-lg shadow-emerald-500/20 transform hover:scale-115 transition">
+                    <svg class="w-8 h-8 text-slate-950" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-kids text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-green-300 tracking-wide drop-shadow">Froggy Jump Math</h1>
+                    <p class="text-xs text-slate-400 font-semibold tracking-wider uppercase">Kelas 2 SD: Perkalian & Pembagian</p>
+                </div>
+            </div>
+
+            <!-- Global Action Controls -->
+            <div class="flex items-center space-x-2">
+                <!-- Sound Toggle -->
+                <button id="bgmToggleBtn" onclick="toggleMusic()" class="bg-slate-800 hover:bg-slate-750 border border-slate-700/60 p-3 rounded-xl transition-all duration-200 text-amber-400 hover:text-amber-300 flex items-center justify-center shadow-inner" title="Nyalakan/Matikan Musik">
+                    <i id="bgmIcon" class="fas fa-volume-up text-lg"></i>
+                </button>
+                
+                <!-- Rain Toggle -->
+                <button id="rainToggleBtn" onclick="toggleRain()" class="bg-slate-800 hover:bg-slate-750 border border-slate-700/60 p-3 rounded-xl transition-all duration-200 text-sky-400 hover:text-sky-300 flex items-center justify-center shadow-inner" title="Aktifkan/Matikan Hujan">
+                    <i id="rainIcon" class="fas fa-cloud-showers-heavy text-lg"></i>
+                </button>
+
+                <!-- Fullscreen Toggle -->
+                <button onclick="toggleFullscreen()" class="bg-slate-800 hover:bg-slate-750 border border-slate-700/60 p-3 rounded-xl transition-all duration-200 text-emerald-400 hover:text-emerald-300 flex items-center justify-center shadow-inner" title="Layar Penuh">
+                    <i class="fas fa-expand text-lg"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Dynamic Workspace -->
+    <main class="flex-grow flex flex-col items-center justify-center p-2 sm:p-4 md:p-6 max-w-[1600px] w-full mx-auto">
+        
+        <!-- Welcome Lobby Screen -->
+        <div id="lobbyScreen" class="w-full max-w-4xl bg-slate-900/90 border-2 border-emerald-500/20 rounded-3xl p-6 md:p-10 shadow-2xl backdrop-blur-md relative overflow-hidden transition-all duration-500 flex flex-col md:flex-row gap-8 items-center">
+            
+            <!-- Left Side Mascot/Visual Decoration -->
+            <div class="w-full md:w-2/5 flex flex-col items-center text-center">
+                <div class="relative mb-4 group">
+                    <div class="absolute inset-0 bg-emerald-500/20 blur-3xl rounded-full group-hover:bg-emerald-500/30 transition-all duration-300"></div>
+                    <!-- Vector Art Frog Illustration -->
+                    <svg class="w-44 h-44 text-emerald-400 relative z-10 filter drop-shadow-[0_8px_16px_rgba(16,185,129,0.3)] animate-bounce" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M8.5,9.5A1.5,1.5 0 0,1 10,11A1.5,1.5 0 0,1 8.5,12.5A1.5,1.5 0 0,1 7,11A1.5,1.5 0 0,1 8.5,9.5M15.5,9.5A1.5,1.5 0 0,1 17,11A1.5,1.5 0 0,1 15.5,12.5A1.5,1.5 0 0,1 14,11A1.5,1.5 0 0,1 15.5,9.5M12,14C13.5,14 14.8,14.8 15.5,16H8.5C9.2,14.8 10.5,14.8 12,14Z" />
+                    </svg>
+                    <!-- Floating Lily Leaf Behind -->
+                    <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-36 h-4 bg-emerald-800/80 rounded-full blur-[2px]"></div>
+                </div>
+                <h2 class="font-kids text-3xl text-emerald-400 mb-1">Hai Teman-Teman!</h2>
+                <p class="text-slate-300 text-sm font-medium">Bantu si Katak melompat ke daun teratai dengan jawaban matematika yang benar!</p>
+            </div>
+
+            <!-- Right Side Selection Controls -->
+            <div class="w-full md:w-3/5 flex flex-col space-y-6">
+                <!-- Select Operators -->
+                <div>
+                    <span class="block text-slate-400 text-xs font-bold uppercase tracking-wider mb-2"><i class="fas fa-brain text-emerald-400 mr-2"></i>Pilih Materi Soal</span>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button id="optMultiply" onclick="toggleOperator('multiply')" class="py-3 px-4 rounded-xl border-2 border-emerald-500 bg-emerald-950/40 text-emerald-300 hover:bg-emerald-950/60 font-bold transition-all duration-150 flex items-center justify-center gap-2 shadow-lg">
+                            <span class="text-xl font-kids">×</span> Perkalian (1-10)
+                        </button>
+                        <button id="optDivide" onclick="toggleOperator('divide')" class="py-3 px-4 rounded-xl border-2 border-slate-700 bg-slate-850 text-slate-400 hover:bg-slate-800 font-bold transition-all duration-150 flex items-center justify-center gap-2">
+                            <span class="text-xl font-kids">÷</span> Pembagian (Bulat)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Select Game Mode -->
+                <div>
+                    <span class="block text-slate-400 text-xs font-bold uppercase tracking-wider mb-2"><i class="fas fa-gamepad text-emerald-400 mr-2"></i>Pilih Mode Permainan</span>
+                    <div class="grid grid-cols-3 gap-3">
+                        <!-- Solo Button -->
+                        <button onclick="setGameMode('solo')" class="group relative py-4 px-2 rounded-2xl border-2 border-slate-700 hover:border-emerald-500 bg-slate-850 hover:bg-slate-800/50 transition duration-200 text-center flex flex-col items-center">
+                            <div class="w-10 h-10 rounded-xl bg-slate-800 group-hover:bg-emerald-500/20 text-slate-400 group-hover:text-emerald-400 flex items-center justify-center mb-2 transition-all">
+                                <i class="fas fa-user text-lg"></i>
+                            </div>
+                            <span class="font-kids text-sm text-slate-200 group-hover:text-emerald-300">SOLO</span>
+                            <span class="text-[10px] text-slate-500 font-semibold uppercase mt-0.5">1 Pemain</span>
+                        </button>
+                        <!-- Duel Button -->
+                        <button onclick="setGameMode('duel')" class="group relative py-4 px-2 rounded-2xl border-2 border-slate-700 hover:border-cyan-500 bg-slate-850 hover:bg-slate-800/50 transition duration-200 text-center flex flex-col items-center">
+                            <div class="w-10 h-10 rounded-xl bg-slate-800 group-hover:bg-cyan-500/20 text-slate-400 group-hover:text-cyan-400 flex items-center justify-center mb-2 transition-all">
+                                <i class="fas fa-users text-lg"></i>
+                            </div>
+                            <span class="font-kids text-sm text-slate-200 group-hover:text-cyan-300">DUEL</span>
+                            <span class="text-[10px] text-slate-500 font-semibold uppercase mt-0.5">2 Pemain</span>
+                        </button>
+                        <!-- Squad Button -->
+                        <button onclick="setGameMode('squad')" class="group relative py-4 px-2 rounded-2xl border-2 border-slate-700 hover:border-purple-500 bg-slate-850 hover:bg-slate-800/50 transition duration-200 text-center flex flex-col items-center">
+                            <div class="w-10 h-10 rounded-xl bg-slate-800 group-hover:bg-purple-500/20 text-slate-400 group-hover:text-purple-400 flex items-center justify-center mb-2 transition-all">
+                                <i class="fas fa-users-cog text-lg"></i>
+                            </div>
+                            <span class="font-kids text-sm text-slate-200 group-hover:text-purple-300">SQUAD</span>
+                            <span class="text-[10px] text-slate-500 font-semibold uppercase mt-0.5">4 Pemain</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Custom Configurations -->
+                <div>
+                    <span class="block text-slate-400 text-xs font-bold uppercase tracking-wider mb-2"><i class="fas fa-hourglass-half text-emerald-400 mr-2"></i>Batas Waktu (Detik)</span>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="setTimerOption(0)" id="timerOptOff" class="flex-1 py-2 px-3 text-xs font-bold rounded-lg border border-emerald-500 bg-emerald-950/20 text-emerald-400 transition">Tanpa Waktu</button>
+                        <button onclick="setTimerOption(15)" id="timerOpt15" class="flex-1 py-2 px-3 text-xs font-bold rounded-lg border border-slate-700 hover:border-slate-600 bg-slate-800 text-slate-400 transition">15 Detik</button>
+                        <button onclick="setTimerOption(30)" id="timerOpt30" class="flex-1 py-2 px-3 text-xs font-bold rounded-lg border border-slate-700 hover:border-slate-600 bg-slate-800 text-slate-400 transition">30 Detik</button>
+                    </div>
+                </div>
+
+                <!-- Play Button -->
+                <button onclick="startGame()" class="w-full py-4 bg-gradient-to-r from-emerald-500 to-green-400 text-slate-950 font-kids text-lg rounded-2xl shadow-xl shadow-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all duration-150 flex items-center justify-center space-x-3 border-b-4 border-emerald-600">
+                    <span>MULAI PETUALANGAN</span>
+                    <i class="fas fa-play"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Dynamic Game Arena -->
+        <div id="gameArena" class="w-full hidden grid gap-4 transition-all duration-500">
+            <!-- Game Viewports are rendered here dynamically -->
+        </div>
+
+    </main>
+
+    <!-- Global Background Particle/Rain Container -->
+    <div id="rainContainer" class="fixed inset-0 pointer-events-none z-0 overflow-hidden opacity-50"></div>
+
+    <!-- Instructions & Footnote -->
+    <footer class="p-4 bg-slate-950/80 border-t border-slate-800/60 z-10">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center text-xs text-slate-500 gap-2">
+            <p>&copy; 2026 Froggy Jump Math. Semua hak dilindungi undang-undang.</p>
+            <div class="flex items-center space-x-4">
+                <span class="flex items-center gap-1 text-emerald-500 font-semibold"><i class="fas fa-gamepad"></i> Belajar Sambil Bermain</span>
+                <span class="flex items-center gap-1 text-cyan-500 font-semibold"><i class="fas fa-check-circle"></i> Ramah Anak Kelas 2 SD</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Audio System and Logic -->
+    <script>
+        // Game Configurations and Global State
+        const CONFIG = {
+            operators: ['multiply'], // Default to multiply
+            gameMode: 'solo', // solo, duel, squad
+            timerLimit: 0, // 0 means unlimited
+            rainEnabled: true
+        };
+
+        // Synthesizer Audio Context Setup
+        let audioCtx = null;
+        let isMusicPlaying = false;
+        let bgmOsc = null;
+        let bgmGain = null;
+        let bgmLooppInterval = null;
+
+        // Custom Sound Generator using Web Audio API (No outside assets dependency)
+        function getAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        // Play Sound FX
+        function playSoundFx(type) {
+            try {
+                const ctx = getAudioContext();
+                const now = ctx.currentTime;
+                
+                if (type === 'correct') {
+                    // Upward arpeggio effect
+                    const osc = ctx.createOscillator();
+                    const gainNode = ctx.createGain();
+                    
+                    osc.type = 'sine';
+                    osc.connect(gainNode);
+                    gainNode.connect(ctx.destination);
+                    
+                    // Soft, warm kid-friendly synth jump
+                    osc.frequency.setValueAtTime(330, now); // E4
+                    osc.frequency.exponentialRampToValueAtTime(660, now + 0.15); // E5
+                    
+                    gainNode.gain.setValueAtTime(0.2, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'wrong') {
+                    // Downward sound ending with splash
+                    const osc = ctx.createOscillator();
+                    const gainNode = ctx.createGain();
+                    
+                    osc.type = 'sawtooth';
+                    osc.connect(gainNode);
+                    gainNode.connect(ctx.destination);
+                    
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.linearRampToValueAtTime(110, now + 0.25);
+                    
+                    gainNode.gain.setValueAtTime(0.15, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                    
+                    // Synthesized splash noise
+                    setTimeout(() => {
+                        playSplashSound();
+                    }, 100);
+                } else if (type === 'jump') {
+                    // Cute jump whoosh
+                    const osc = ctx.createOscillator();
+                    const gainNode = ctx.createGain();
+                    
+                    osc.type = 'triangle';
+                    osc.connect(gainNode);
+                    gainNode.connect(ctx.destination);
+                    
+                    osc.frequency.setValueAtTime(180, now);
+                    osc.frequency.exponentialRampToValueAtTime(440, now + 0.18);
+                    
+                    gainNode.gain.setValueAtTime(0.25, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                    
+                    osc.start(now);
+                    osc.stop(now + 0.2);
+                }
+            } catch (e) {
+                console.warn('Audio synthesis failed to initialize:', e);
+            }
+        }
+
+        // Noise buffer helper for splash audio
+        function playSplashSound() {
+            try {
+                const ctx = getAudioContext();
+                const now = ctx.currentTime;
+                const bufferSize = ctx.sampleRate * 0.4; // 0.4 seconds of splash
+                const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                
+                // White noise combined with filtering
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                
+                const noiseNode = ctx.createBufferSource();
+                noiseNode.buffer = buffer;
+                
+                const filter = ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(800, now);
+                filter.frequency.exponentialRampToValueAtTime(100, now + 0.4);
+                
+                const gain = ctx.createGain();
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                
+                noiseNode.connect(filter);
+                filter.connect(gain);
+                gain.connect(ctx.destination);
+                
+                noiseNode.start(now);
+            } catch (e) {
+                console.warn(e);
+            }
+        }
+
+        // Synthesize cute 8-bit background music
+        function playBGM() {
+            try {
+                const ctx = getAudioContext();
+                const notes = [
+                    261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25 // Scale of C4
+                ];
+                // Simple happy nursery melody structure
+                const melody = [2, 4, 5, 4, 2, 2, 4, 4, 5, 5, 6, 7, 7, 6, 5, 4, 3, 2, 0];
+                let melodyIndex = 0;
+
+                bgmGain = ctx.createGain();
+                bgmGain.gain.setValueAtTime(0.035, ctx.currentTime); // Low background volume
+                bgmGain.connect(ctx.destination);
+
+                bgmLooppInterval = setInterval(() => {
+                    if (!isMusicPlaying) return;
+                    
+                    const now = ctx.currentTime;
+                    const osc = ctx.createOscillator();
+                    osc.type = 'triangle';
+                    
+                    const noteFreq = notes[melody[melodyIndex] % notes.length];
+                    osc.frequency.setValueAtTime(noteFreq, now);
+                    
+                    const noteGain = ctx.createGain();
+                    noteGain.gain.setValueAtTime(0.08, now);
+                    noteGain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+                    
+                    osc.connect(noteGain);
+                    noteGain.connect(bgmGain);
+                    
+                    osc.start(now);
+                    osc.stop(now + 0.4);
+                    
+                    melodyIndex = (melodyIndex + 1) % melody.length;
+                }, 400); // tempo
+            } catch (e) {
+                console.warn('Could not launch background music:', e);
+            }
+        }
+
+        function stopBGM() {
+            if (bgmLooppInterval) {
+                clearInterval(bgmLooppInterval);
+                bgmLooppInterval = null;
+            }
+            if (bgmGain) {
+                bgmGain.disconnect();
+                bgmGain = null;
+            }
+        }
+
+        function toggleMusic() {
+            const icon = document.getElementById('bgmIcon');
+            const btn = document.getElementById('bgmToggleBtn');
+            
+            isMusicPlaying = !isMusicPlaying;
+            if (isMusicPlaying) {
+                getAudioContext(); // Resume or Init context
+                playBGM();
+                icon.className = 'fas fa-volume-up text-lg';
+                btn.classList.remove('text-slate-400');
+                btn.classList.add('text-amber-400');
+            } else {
+                stopBGM();
+                icon.className = 'fas fa-volume-mute text-lg';
+                btn.classList.remove('text-amber-400');
+                btn.classList.add('text-slate-400');
+            }
+        }
+
+        // Toggle Particles (Rain)
+        function toggleRain() {
+            const container = document.getElementById('rainContainer');
+            const icon = document.getElementById('rainIcon');
+            const btn = document.getElementById('rainToggleBtn');
+            
+            CONFIG.rainEnabled = !CONFIG.rainEnabled;
+            if (CONFIG.rainEnabled) {
+                container.style.opacity = '0.5';
+                icon.className = 'fas fa-cloud-showers-heavy text-lg';
+                btn.classList.add('text-sky-400');
+                btn.classList.remove('text-slate-400');
+            } else {
+                container.style.opacity = '0';
+                icon.className = 'fas fa-sun text-lg';
+                btn.classList.remove('text-sky-400');
+                btn.classList.add('text-slate-400');
+            }
+        }
+
+        // Set Operator Configurations (Multiply / Divide)
+        function toggleOperator(type) {
+            const multBtn = document.getElementById('optMultiply');
+            const divBtn = document.getElementById('optDivide');
+
+            if (type === 'multiply') {
+                if (CONFIG.operators.includes('multiply') && CONFIG.operators.includes('divide')) {
+                    CONFIG.operators = ['divide'];
+                    multBtn.className = "py-3 px-4 rounded-xl border-2 border-slate-700 bg-slate-850 text-slate-400 hover:bg-slate-800 font-bold transition-all duration-150 flex items-center justify-center gap-2";
+                } else if (!CONFIG.operators.includes('multiply')) {
+                    CONFIG.operators.push('multiply');
+                    multBtn.className = "py-3 px-4 rounded-xl border-2 border-emerald-500 bg-emerald-950/40 text-emerald-300 hover:bg-emerald-950/60 font-bold transition-all duration-150 flex items-center justify-center gap-2 shadow-lg";
+                }
+            } else {
+                if (CONFIG.operators.includes('divide') && CONFIG.operators.includes('multiply')) {
+                    CONFIG.operators = ['multiply'];
+                    divBtn.className = "py-3 px-4 rounded-xl border-2 border-slate-700 bg-slate-850 text-slate-400 hover:bg-slate-800 font-bold transition-all duration-150 flex items-center justify-center gap-2";
+                } else if (!CONFIG.operators.includes('divide')) {
+                    CONFIG.operators.push('divide');
+                    divBtn.className = "py-3 px-4 rounded-xl border-2 border-emerald-500 bg-emerald-950/40 text-emerald-300 hover:bg-emerald-950/60 font-bold transition-all duration-150 flex items-center justify-center gap-2 shadow-lg";
+                }
+            }
+        }
+
+        // Set Timer Customization Options
+        function setTimerOption(seconds) {
+            CONFIG.timerLimit = seconds;
+            
+            const btnOff = document.getElementById('timerOptOff');
+            const btn15 = document.getElementById('timerOpt15');
+            const btn30 = document.getElementById('timerOpt30');
+
+            // Reset classes
+            [btnOff, btn15, btn30].forEach(btn => {
+                btn.className = "flex-1 py-2 px-3 text-xs font-bold rounded-lg border border-slate-700 hover:border-slate-600 bg-slate-800 text-slate-400 transition";
+            });
+
+            if (seconds === 0) {
+                btnOff.className = "flex-1 py-2 px-3 text-xs font-bold rounded-lg border border-emerald-500 bg-emerald-950/20 text-emerald-400 transition";
+            } else if (seconds === 15) {
+                btn15.className = "flex-1 py-2 px-3 text-xs font-bold rounded-lg border border-emerald-500 bg-emerald-950/20 text-emerald-400 transition";
+            } else if (seconds === 30) {
+                btn30.className = "flex-1 py-2 px-3 text-xs font-bold rounded-lg border border-emerald-500 bg-emerald-950/20 text-emerald-400 transition";
+            }
+        }
+
+        // Choose Multiplayer Screen Split Modes
+        function setGameMode(mode) {
+            CONFIG.gameMode = mode;
+            // Visually trigger start automatically once a game mode is picked
+            startGame();
+        }
+
+        // Fullscreen Toggle Helper
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.error(`Error attempting to enable full-screen: ${err.message}`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // Question Engine Generator
+        // Designed for Kelas 2 SD (simple multiplications 1-10 & simple exact divisions)
+        function generateMathQuestion() {
+            // Decide operator randomly based on user selection
+            const op = CONFIG.operators[Math.floor(Math.random() * CONFIG.operators.length)];
+            let num1, num2, answer, questionString;
+
+            if (op === 'multiply') {
+                num1 = Math.floor(Math.random() * 10) + 1; // 1 to 10
+                num2 = Math.floor(Math.random() * 10) + 1; // 1 to 10
+                answer = num1 * num2;
+                questionString = `${num1} × ${num2} = ?`;
+            } else {
+                // Division
+                num2 = Math.floor(Math.random() * 9) + 2; // Divisor (2 to 10)
+                answer = Math.floor(Math.random() * 9) + 2; // Quotient (2 to 10)
+                num1 = num2 * answer; // Dividend
+                questionString = `${num1} ÷ ${num2} = ?`;
+            }
+
+            // Create 4 distinct multiple choice answers
+            const optionsSet = new Set([answer]);
+            while (optionsSet.size < 4) {
+                let offset = Math.floor(Math.random() * 13) - 6; // deviation around real answer
+                let fakeAns = answer + offset;
+                if (fakeAns > 0 && fakeAns !== answer) {
+                    optionsSet.add(fakeAns);
+                }
+            }
+
+            // Shuffle option list
+            const options = Array.from(optionsSet).sort(() => Math.random() - 0.5);
+
+            return {
+                question: questionString,
+                correct: answer,
+                options: options
+            };
+        }
+
+        // Active Player Instances Store
+        let activePlayers = [];
+
+        class PlayerInstance {
+            constructor(id, name, colorTheme, keys) {
+                this.id = id;
+                this.name = name;
+                this.theme = colorTheme; // 'emerald', 'cyan', 'fuchsia', 'amber'
+                this.keys = keys; // Keyboard hotkeys map
+                this.score = 0;
+                this.currentQuestion = null;
+                this.timer = CONFIG.timerLimit;
+                this.timerInterval = null;
+                this.status = 'ready'; // 'ready', 'jumping', 'falling', 'won_question', 'failed'
+                this.containerElement = null;
+                this.streak = 0;
+            }
+
+            init(parentContainer) {
+                // HTML Generation for individual split screens with customizable game mechanics
+                const borderColors = {
+                    emerald: 'border-emerald-500/30 ring-emerald-500/20',
+                    cyan: 'border-cyan-500/30 ring-cyan-500/20',
+                    fuchsia: 'border-fuchsia-500/30 ring-fuchsia-500/20',
+                    amber: 'border-amber-500/30 ring-amber-500/20'
+                };
+
+                const playerThemeHeader = {
+                    emerald: 'from-emerald-600/20 to-green-600/10 text-emerald-400',
+                    cyan: 'from-cyan-600/20 to-blue-600/10 text-cyan-400',
+                    fuchsia: 'from-fuchsia-600/20 to-purple-600/10 text-fuchsia-400',
+                    amber: 'from-amber-600/20 to-orange-600/10 text-amber-400'
+                };
+
+                const playerBg = {
+                    emerald: 'bg-emerald-950/20',
+                    cyan: 'bg-cyan-950/20',
+                    fuchsia: 'bg-fuchsia-950/20',
+                    amber: 'bg-amber-950/20'
+                };
+
+                const layoutHtml = `
+                    <div id="p-card-${this.id}" class="relative flex flex-col justify-between overflow-hidden rounded-2xl border-2 ${borderColors[this.theme]} bg-slate-900/90 shadow-xl min-h-[460px] md:min-h-[520px] transition-all duration-300">
+                        
+                        <!-- Header Bar (Player Info, Score, Timer) -->
+                        <div class="flex items-center justify-between p-3 border-b border-slate-800 bg-gradient-to-r ${playerThemeHeader[this.theme]} select-none">
+                            <div class="flex items-center space-x-2">
+                                <span class="font-kids text-lg">${this.name}</span>
+                                <span class="text-xs px-2 py-0.5 rounded-full bg-slate-950/60 font-bold border border-slate-700/50">${this.streak}★</span>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <!-- Score Badge -->
+                                <div class="flex items-center space-x-1.5 bg-slate-950/50 px-2.5 py-1 rounded-lg border border-slate-800">
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">SKOR:</span>
+                                    <span id="p-score-${this.id}" class="font-kids text-amber-400 text-lg">0</span>
+                                </div>
+                                <!-- Timer Badge -->
+                                ${CONFIG.timerLimit > 0 ? `
+                                <div id="p-timer-box-${this.id}" class="flex items-center space-x-1.5 bg-rose-950/30 px-2.5 py-1 rounded-lg border border-rose-500/30 text-rose-400">
+                                    <i class="fas fa-hourglass-half text-xs animate-pulse"></i>
+                                    <span id="p-timer-${this.id}" class="font-kids text-sm">${CONFIG.timerLimit}s</span>
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+
+                        <!-- Main Screen Canvas & Simulated Water Pool Area -->
+                        <div class="relative flex-grow flex flex-col justify-between p-4 overflow-hidden" style="background: linear-gradient(180deg, rgba(15,23,42,0.95) 0%, rgba(13,63,60,0.4) 100%);">
+                            
+                            <!-- Question Card Banner -->
+                            <div class="relative z-10 w-full max-w-sm mx-auto bg-slate-950/80 border border-slate-800 rounded-xl p-3 shadow-lg flex flex-col items-center text-center">
+                                <span class="text-[10px] text-emerald-400 font-bold uppercase tracking-widest mb-1">PERTANYAAN</span>
+                                <span id="p-quest-${this.id}" class="font-kids text-2xl md:text-3xl text-slate-100 tracking-wide">-- × --</span>
+                            </div>
+
+                            <!-- Animated Pond Area (Interactive Mascot & Frog Action) -->
+                            <div id="p-pond-${this.id}" class="relative flex-grow min-h-[160px] flex items-end justify-center py-4">
+                                <!-- Dynamic Ripple Rings -->
+                                <div id="p-ripples-${this.id}" class="absolute inset-0 pointer-events-none overflow-hidden"></div>
+                                
+                                <!-- Floating Frog Container (Simulated with absolute mechanics for smooth leap transformations) -->
+                                <div id="p-frog-container-${this.id}" class="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 transition-all duration-500 ease-out flex flex-col items-center">
+                                    <!-- Frog Mascot Design via High Quality SVGs -->
+                                    <div id="p-frog-art-${this.id}" class="w-16 h-16 transition-all duration-300 drop-shadow-[0_4px_8px_rgba(52,211,153,0.3)]">
+                                        <svg viewBox="0 0 24 24" fill="currentColor" class="text-emerald-400 w-full h-full">
+                                            <!-- Happy Frog Icon Shape -->
+                                            <path d="M12 2a9 9 0 0 0-9 9c0 1.25.26 2.45.74 3.53l-.74 1.47a1 1 0 0 0 .89 1.45h2.15a9 9 0 0 0 11.92 0h2.15a1 1 0 0 0 .89-1.45l-.74-1.47c.48-1.08.74-2.28.74-3.53a9 9 0 0 0-9-9zm-4.5 6a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm9 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm-6.5 7h4a2 2 0 0 1-4 0z" />
+                                        </svg>
+                                    </div>
+                                    <div id="p-leaf-${this.id}" class="w-24 h-5 bg-emerald-800/80 rounded-full border-b border-emerald-900 shadow-lg mt-1 animate-leaf flex items-center justify-center">
+                                        <div class="w-20 h-3 bg-emerald-700/50 rounded-full"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Choice Leaf Platforms (The Answers Matrix) -->
+                            <div class="relative z-10 w-full grid grid-cols-2 gap-3 max-w-md mx-auto">
+                                ${[0, 1, 2, 3].map(idx => `
+                                    <button id="p-opt-${this.id}-${idx}" onclick="activePlayers[${this.id}].submitAnswer(${idx})" class="group relative py-3 px-4 bg-slate-900/90 hover:bg-emerald-950/30 border-2 border-slate-800 hover:border-emerald-400/60 rounded-xl transition-all duration-150 shadow-md flex items-center justify-between text-left">
+                                        <div class="flex items-center space-x-2">
+                                            <!-- Platform Hotkey Visual indicator -->
+                                            <span class="w-5 h-5 rounded bg-slate-800 text-slate-400 text-[10px] font-bold flex items-center justify-center uppercase border border-slate-700 select-none">${this.keys[idx]}</span>
+                                            <span id="p-opt-text-${this.id}-${idx}" class="font-kids text-lg text-slate-200 group-hover:text-emerald-300">0</span>
+                                        </div>
+                                        <!-- Leaf Icon Accent -->
+                                        <svg class="w-5 h-5 text-emerald-600 group-hover:text-emerald-400 transition" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M17,8C8,10 5.9,16.17 3.82,21.34L5.71,22L7.58,17.5C11.5,16.5 17.5,14.5 22,3C21,4 19,5.5 17,8M6.25,10.1C5.5,11.5 5,13.08 5,14.73C6.38,13.1 8.28,11.57 10.75,10.25C9,9.85 7.45,9.8 6.25,10.1Z" />
+                                        </svg>
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <!-- Feedback Notifications (Toast over arena overlay) -->
+                        <div id="p-toast-${this.id}" class="absolute inset-0 z-30 pointer-events-none flex flex-col items-center justify-center bg-slate-950/70 opacity-0 transition-opacity duration-300">
+                            <div id="p-toast-card-${this.id}" class="transform scale-75 transition-transform duration-300 bg-slate-900 border border-emerald-500 rounded-2xl p-6 text-center shadow-2xl max-w-xs">
+                                <div id="p-toast-icon-${this.id}" class="w-16 h-16 rounded-full mx-auto mb-3 flex items-center justify-center text-3xl"></div>
+                                <h3 id="p-toast-title-${this.id}" class="font-kids text-xl mb-1">Sempurna!</h3>
+                                <p id="p-toast-desc-${this.id}" class="text-sm text-slate-400">Kamu Hebat Berhitung</p>
+                            </div>
+                        </div>
+
+                    </div>
+                `;
+
+                this.containerElement = document.createElement('div');
+                this.containerElement.innerHTML = layoutHtml;
+                parentContainer.appendChild(this.containerElement.firstElementChild);
+                
+                this.nextQuestion();
+                this.startTimer();
+            }
+
+            // Game State Loop & Timer
+            startTimer() {
+                if (CONFIG.timerLimit === 0) return;
+                
+                const timerVal = document.getElementById(`p-timer-${this.id}`);
+                const timerBox = document.getElementById(`p-timer-box-${this.id}`);
+                this.timer = CONFIG.timerLimit;
+
+                if (this.timerInterval) clearInterval(this.timerInterval);
+
+                this.timerInterval = setInterval(() => {
+                    this.timer--;
+                    if (timerVal) timerVal.innerText = `${this.timer}s`;
+
+                    // Warnings UI transformations
+                    if (this.timer <= 5) {
+                        timerBox.className = "flex items-center space-x-1.5 bg-rose-950/80 px-2.5 py-1 rounded-lg border-2 border-rose-500 text-rose-300 animate-pulse";
+                    } else {
+                        timerBox.className = "flex items-center space-x-1.5 bg-rose-950/30 px-2.5 py-1 rounded-lg border border-rose-500/30 text-rose-400";
+                    }
+
+                    if (this.timer <= 0) {
+                        clearInterval(this.timerInterval);
+                        this.handleFailure('Waktu Habis!');
+                    }
+                }, 1000);
+            }
+
+            // Display a new question
+            nextQuestion() {
+                if (this.status === 'jumping' || this.status === 'falling') return;
+                
+                this.status = 'ready';
+                this.currentQuestion = generateMathQuestion();
+                
+                // Render text elements
+                document.getElementById(`p-quest-${this.id}`).innerText = this.currentQuestion.question;
+                
+                // Assign options values to dynamic option buttons
+                this.currentQuestion.options.forEach((val, idx) => {
+                    const textEl = document.getElementById(`p-opt-text-${this.id}-${idx}`);
+                    const btnEl = document.getElementById(`p-opt-${this.id}-${idx}`);
+                    
+                    textEl.innerText = val;
+                    // Reset styling classes to default slate outline
+                    btnEl.className = "group relative py-3 px-4 bg-slate-900/90 hover:bg-emerald-950/30 border-2 border-slate-800 hover:border-emerald-400/60 rounded-xl transition-all duration-150 shadow-md flex items-center justify-between text-left";
+                });
+
+                // Reset Frog visual state and floating leaf positions
+                const frog = document.getElementById(`p-frog-container-${this.id}`);
+                frog.style.bottom = "24px";
+                frog.style.transform = "translateX(-50%) scale(1)";
+                frog.style.opacity = "1";
+
+                this.startTimer();
+            }
+
+            // Process Answer Submissions
+            submitAnswer(optionIndex) {
+                if (this.status !== 'ready') return;
+                
+                const selectedVal = this.currentQuestion.options[optionIndex];
+                const isCorrect = (selectedVal === this.currentQuestion.correct);
+                
+                const chosenButton = document.getElementById(`p-opt-${this.id}-${optionIndex}`);
+
+                if (isCorrect) {
+                    this.status = 'jumping';
+                    if (this.timerInterval) clearInterval(this.timerInterval);
+                    
+                    playSoundFx('jump');
+
+                    // Turn chosen option visual to successful leaf green color
+                    chosenButton.className = "group relative py-3 px-4 bg-emerald-950/50 border-2 border-emerald-400 rounded-xl transition-all duration-150 shadow-md flex items-center justify-between text-left ring-2 ring-emerald-500/30 animate-pulse";
+
+                    // Trigger smooth Frog jump animation to the top
+                    const frog = document.getElementById(`p-frog-container-${this.id}`);
+                    frog.style.bottom = "120px";
+                    frog.style.transform = "translateX(-50%) scale(1.18)";
+                    
+                    setTimeout(() => {
+                        playSoundFx('correct');
+                        this.score += 10;
+                        this.streak += 1;
+                        document.getElementById(`p-score-${this.id}`).innerText = this.score;
+                        
+                        // Bounce feedback & Sparkles
+                        this.showToast('correct', 'Sempurna!', 'Katak berhasil melompat dengan aman.');
+                        this.createRipple(true);
+                        
+                        setTimeout(() => {
+                            this.hideToast();
+                            this.nextQuestion();
+                        }, 1200);
+
+                    }, 400);
+
+                } else {
+                    // Wrong choice response
+                    this.status = 'falling';
+                    if (this.timerInterval) clearInterval(this.timerInterval);
+
+                    // Transform chosen button to failed rose crimson
+                    chosenButton.className = "group relative py-3 px-4 bg-rose-950/50 border-2 border-rose-500 rounded-xl transition-all duration-150 shadow-md flex items-center justify-between text-left ring-2 ring-rose-500/30";
+
+                    this.handleFailure('Salah Lompat!');
+                }
+            }
+
+            // Common routine to handle mistakes / timeouts
+            handleFailure(cause) {
+                playSoundFx('wrong');
+                this.streak = 0;
+                
+                // Sink frog down to represent falling into water
+                const frog = document.getElementById(`p-frog-container-${this.id}`);
+                frog.style.bottom = "-30px";
+                frog.style.opacity = "0";
+                
+                // Show water ripple ripple triggers
+                setTimeout(() => {
+                    this.createRipple(false);
+                }, 150);
+
+                this.showToast('wrong', cause, 'Tetap semangat! Katak tergelincir ke kolam air.');
+
+                setTimeout(() => {
+                    this.hideToast();
+                    this.nextQuestion();
+                }, 1800);
+            }
+
+            // Create customized Canvas/HTML Ripples on water surface
+            createRipple(isCorrect) {
+                const pond = document.getElementById(`p-pond-${this.id}`);
+                if (!pond) return;
+
+                const rippleContainer = document.getElementById(`p-ripples-${this.id}`);
+                const element = document.createElement('div');
+                
+                // Align ripple origin perfectly under frog base
+                element.className = 'ripple';
+                element.style.left = '50%';
+                element.style.bottom = '15px';
+                
+                if (!isCorrect) {
+                    element.style.borderColor = 'rgba(239, 68, 68, 0.7)'; // Rose ripple for failure
+                } else {
+                    element.style.borderColor = 'rgba(52, 211, 153, 0.7)'; // Green for success
+                }
+
+                rippleContainer.appendChild(element);
+
+                // Auto sweep/garbage collect old DOM ripples
+                setTimeout(() => {
+                    element.remove();
+                }, 1200);
+            }
+
+            showToast(type, title, desc) {
+                const toast = document.getElementById(`p-toast-${this.id}`);
+                const card = document.getElementById(`p-toast-card-${this.id}`);
+                const icon = document.getElementById(`p-toast-icon-${this.id}`);
+                const titleEl = document.getElementById(`p-toast-title-${this.id}`);
+                const descEl = document.getElementById(`p-toast-desc-${this.id}`);
+
+                if (type === 'correct') {
+                    icon.innerHTML = '🐸';
+                    icon.className = "w-16 h-16 rounded-full mx-auto mb-3 flex items-center justify-center text-3xl bg-emerald-500/20 text-emerald-400 border border-emerald-400/40";
+                    card.className = "transform scale-100 transition-transform duration-300 bg-slate-900 border-2 border-emerald-400 rounded-2xl p-6 text-center shadow-2xl max-w-xs";
+                    titleEl.className = "font-kids text-xl text-emerald-400 mb-1";
+                } else {
+                    icon.innerHTML = '🌊';
+                    icon.className = "w-16 h-16 rounded-full mx-auto mb-3 flex items-center justify-center text-3xl bg-rose-500/20 text-rose-400 border border-rose-400/40";
+                    card.className = "transform scale-100 transition-transform duration-300 bg-slate-900 border-2 border-rose-500 rounded-2xl p-6 text-center shadow-2xl max-w-xs";
+                    titleEl.className = "font-kids text-xl text-rose-400 mb-1";
+                }
+
+                titleEl.innerText = title;
+                descEl.innerText = desc;
+
+                toast.classList.remove('opacity-0', 'pointer-events-none');
+                toast.classList.add('opacity-100');
+            }
+
+            hideToast() {
+                const toast = document.getElementById(`p-toast-${this.id}`);
+                if (toast) {
+                    toast.classList.add('opacity-0', 'pointer-events-none');
+                    toast.classList.remove('opacity-100');
+                }
+            }
+
+            destroy() {
+                if (this.timerInterval) clearInterval(this.timerInterval);
+            }
+        }
+
+        // Setup Player Instances base on Selected split screen modes
+        function startGame() {
+            // Stop old active processes safely
+            activePlayers.forEach(p => p.destroy());
+            activePlayers = [];
+
+            // Audio Context Warmup
+            getAudioContext();
+
+            // Transition: Lobby Screen fade-out -> Arena Screen fade-in
+            const lobby = document.getElementById('lobbyScreen');
+            const arena = document.getElementById('gameArena');
+
+            lobby.classList.add('hidden');
+            arena.classList.remove('hidden');
+
+            arena.innerHTML = ''; // Reset Grid
+            
+            // Adjust layouts for Multi-View Dual screen / Squad grids
+            if (CONFIG.gameMode === 'solo') {
+                arena.className = "w-full max-w-3xl mx-auto grid grid-cols-1 gap-4";
+                
+                const p1 = new PlayerInstance(0, "Player 1", "emerald", ["A", "S", "D", "F"]);
+                activePlayers.push(p1);
+                p1.init(arena);
+            } 
+            else if (CONFIG.gameMode === 'duel') {
+                arena.className = "w-full max-w-7xl mx-auto grid duel-layout gap-4";
+                
+                // Left screen (Player 1) with tactile WASD controls
+                const p1 = new PlayerInstance(0, "Player 1 (Kiri)", "cyan", ["A", "S", "D", "F"]);
+                // Right screen (Player 2) with HJKL controls or Right aligned keys
+                const p2 = new PlayerInstance(1, "Player 2 (Kanan)", "fuchsia", ["H", "J", "K", "L"]);
+                
+                activePlayers.push(p1, p2);
+                p1.init(arena);
+                p2.init(arena);
+            } 
+            else if (CONFIG.gameMode === 'squad') {
+                arena.className = "w-full max-w-[1600px] mx-auto grid squad-layout gap-3";
+                
+                const p1 = new PlayerInstance(0, "P1", "emerald", ["1", "2", "3", "4"]);
+                const p2 = new PlayerInstance(1, "P2", "cyan", ["Q", "W", "E", "R"]);
+                const p3 = new PlayerInstance(2, "P3", "fuchsia", ["U", "I", "O", "P"]);
+                const p4 = new PlayerInstance(3, "P4", "amber", ["Z", "X", "C", "V"]);
+
+                activePlayers.push(p1, p2, p3, p4);
+                p1.init(arena);
+                p2.init(arena);
+                p3.init(arena);
+                p4.init(arena);
+            }
+        }
+
+        // Listen for Keyboard Keydown Actions (Perfect for multiplayer setups!)
+        window.addEventListener('keydown', (e) => {
+            const pressedKey = e.key.toUpperCase();
+
+            activePlayers.forEach(player => {
+                if (player.status !== 'ready') return;
+                
+                // Compare with user configured keys
+                const idx = player.keys.indexOf(pressedKey);
+                if (idx !== -1) {
+                    player.submitAnswer(idx);
+                }
+            });
+        });
+
+        // Background Hujan Ringan (Weather Ambient Particle System Engine)
+        function generateRainfall() {
+            const container = document.getElementById('rainContainer');
+            const dropCount = 45; // density of rains
+
+            for (let i = 0; i < dropCount; i++) {
+                const drop = document.createElement('div');
+                drop.className = 'rain-drop';
+                
+                // Random positioning
+                drop.style.left = `${Math.random() * 100}vw`;
+                drop.style.top = `${Math.random() * -20}vh`;
+                drop.style.height = `${Math.random() * 30 + 15}px`;
+                drop.style.animationDuration = `${Math.random() * 1 + 0.8}s`;
+                drop.style.animationDelay = `${Math.random() * 2}s`;
+                drop.style.animationIterationCount = 'infinite';
+                drop.style.animationTimingFunction = 'linear';
+                
+                // Simple custom animation injected for rain falling
+                drop.style.transform = 'translateY(0)';
+                
+                container.appendChild(drop);
+                animateRainDrop(drop);
+            }
+        }
+
+        function animateRainDrop(drop) {
+            let currentTop = parseFloat(drop.style.top);
+            const speed = Math.random() * 12 + 18; // vertical falling speed
+            
+            function step() {
+                if (!CONFIG.rainEnabled) {
+                    requestAnimationFrame(step);
+                    return;
+                }
+                
+                currentTop += speed;
+                drop.style.transform = `translateY(${currentTop}px)`;
+
+                // Loop rain once it passes viewport bottom boundaries
+                if (currentTop > window.innerHeight + 50) {
+                    currentTop = -50;
+                    drop.style.left = `${Math.random() * 100}vw`;
+                }
+                requestAnimationFrame(step);
+            }
+            requestAnimationFrame(step);
+        }
+
+        // Initialize elements once DOM is ready
+        window.onload = function() {
+            generateRainfall();
+        }
+    </script>
+</body>
+</html>
